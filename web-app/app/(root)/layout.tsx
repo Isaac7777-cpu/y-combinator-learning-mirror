@@ -3,7 +3,7 @@ import React from "react";
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <main className="font-work-sans">
+        <main className="font-work-sans bg-gray-50">
             <Navbar />
             {children}
         </main>
