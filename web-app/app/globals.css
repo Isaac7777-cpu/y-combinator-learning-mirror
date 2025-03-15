@@ -3,7 +3,7 @@ layer(base);
 
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(string *));
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --breakpoint-xs: 475px;
