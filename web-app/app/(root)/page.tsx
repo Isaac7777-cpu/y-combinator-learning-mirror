@@ -1,5 +1,7 @@
 import SearchForm from "@/components/SearchForm";
-import StartupCard from "@/components/StartupCard";
+import StartupCard, { StartupTypeCard } from "@/components/StartupCard";
+import { client } from "@/sanity/lib/client";
+import { STARTUPS_QUERY } from "@/sanity/lib/query";
 
 export default async function Home({ searchParams }: {
     searchParams: Promise<{ query?: string }>
@@ -7,22 +9,14 @@ export default async function Home({ searchParams }: {
 
     const query = (await searchParams).query;
 
-    const posts = [
-        {
-            _createdAt: new Date(),
-            views: 95,
-            author: { _id: 1, name: "Isaac Newton" },
-            _id: 1,
-            description: "This is a description",
-            image: "https://upload.wikimedia.org/wikipedia/en/c/ca/Steins%3BGate_anime_cover.png",
-            category: "Anime",
-            title: "Anime2 Studio"
-        }
-    ];
+    const posts = await client.fetch(STARTUPS_QUERY);
 
     // We can directly do the search here. 
     // However, given that it likely to require some client side information, it is better to separate that 
     // into a different component and only have that component to be client side rendering.
+    //
+    // It is also important note that any GROQ query or schema can use the sanity type generation 
+    // to generate the types automatically. This is why we have left the type undefined for so long.
     return (
         <>
             <section className="pink_container">
@@ -43,10 +37,10 @@ export default async function Home({ searchParams }: {
 
                 <ul className="mt-7 card_grid">
                     {posts?.length > 0 ? (
-                        posts.map((post: StartupCardType, number) => (
+                        posts.map((post: StartupTypeCard) => (
                             <StartupCard key={post?._id} post={post} />
                         ))
-                    ): (
+                    ) : (
                         <p className="no-result">No startups found</p>
                     )}
                 </ul>
