@@ -3,7 +3,7 @@
 // Indeed, sanity allows for selecting a specific strategy for this one.
 // This is known as PPR.
 
-import { STARTUP_BY_ID_QUERY } from '@/sanity/lib/query';
+import { PLAYLIST_BY_SLUG_QUERY, STARTUP_BY_ID_QUERY } from '@/sanity/lib/query';
 import { client } from "@/sanity/lib/client"
 import React, { Suspense } from 'react'
 import { notFound } from 'next/navigation';
@@ -12,7 +12,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import markdownit from 'markdown-it';
 import { Skeleton } from '@/components/ui/skeleton';
-import  View  from '@/components/View';
+import View from '@/components/View';
+import StartupCard, { StartupTypeCard } from '@/components/StartupCard';
 
 const md = markdownit();
 
@@ -21,10 +22,20 @@ export const experimental_ppr = true;
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
     const id = (await params).id;
-    const post = await client.fetch(STARTUP_BY_ID_QUERY, { id });
+
+    // Sequential Fetching, the second query is only performed after first one is done.
+    //
+    // const post = await client.fetch(STARTUP_BY_ID_QUERY, { id });
+    // const { select: editorPosts } = await client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: `editor-picks` })
+    
+    // Parallel Fetching (Much Faster)
+    const [post, { select : editorPosts }] = await Promise.all([
+        client.fetch(STARTUP_BY_ID_QUERY, { id }),
+        client.fetch(PLAYLIST_BY_SLUG_QUERY, { slug: `editor-picks` }),
+    ])
 
     if (!post) return notFound();
-    
+
     const parsedContent = md.render(post?.pitch || '');
 
     return (
@@ -59,8 +70,8 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
                     <h3 className='text-30-bold'>Pitch Detail</h3>
 
-                    {parsedContent? (
-                        <article 
+                    {parsedContent ? (
+                        <article
                             className="prose max-w-4xl font-work-sans break-all"
                             dangerouslySetInnerHTML={{ __html: parsedContent }} />
                     ) : (
@@ -70,10 +81,20 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
 
                 <hr className='divider' />
 
-                {/* TODO: EDITOR SELECTED STARTUPS */}
+                {editorPosts?.length > 0 && (
+                    <div className="max-w-4xl mx-auto">
+                        <p className="text-30-semibold">Editor Picks</p>
 
-                <Suspense fallback={<Skeleton className='view_skeleton'/>}>
-                   <View id={id} /> 
+                        <ul className="mt-7 card_grid-sm">
+                            {editorPosts.map((post: StartupTypeCard, i: number) => (
+                                <StartupCard key={i} post={post} />
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                <Suspense fallback={<Skeleton className='view_skeleton' />}>
+                    <View id={id} />
                 </Suspense>
             </section>
         </>
