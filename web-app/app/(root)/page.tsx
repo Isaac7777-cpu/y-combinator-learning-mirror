@@ -23,7 +23,7 @@ export default async function Home({ searchParams }: {
     // to generate the types automatically. This is why we have left the type undefined for so long.
     return (
         <>
-            <section className="pink_container">
+            <section className="pink_container font-work-sans">
                 <h1 className="heading">
                     Pitch Your Startup, <br /> Connect With Entrepreneurs
                 </h1>
